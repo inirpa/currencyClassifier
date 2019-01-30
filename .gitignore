@@ -1,0 +1,8 @@
+checkpoint
+data/
+log/
+money--0.001--6CONV-BASIC.model.data-00000-of-00001
+money--0.001--6CONV-BASIC.model.index
+money--0.001--6CONV-BASIC.model.meta
+test_data.npy
+train_data.npy
