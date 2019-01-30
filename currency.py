@@ -6,8 +6,8 @@ from random import shuffle
 from tqdm import tqdm
 
 
-train_dir = 'H:\\python\\practice\\money\\data\\train'
-test_dir = 'H:\\python\\practice\\money\\data\\test'
+train_dir = '.\\data\\train'
+test_dir = '.\\data\\valid'
 
 img_size = 50
 learning_rate = 1e-3
@@ -17,9 +17,11 @@ MODEL_NAME = 'money--{}--{}.model'.format(learning_rate,'6CONV-BASIC')
 def img_label(img):
 	word_label = img.split('.')[0].split('_')[0]
 	if word_label == 'ten':
-		return [1,0]
+		return [1,0,0]
 	elif word_label == 'tw':
-		return [0,1]
+		return [0,1,0]
+	elif word_label == 'fifty':
+		return [0,0,1]
 
 def create_train_data():
 	training_data = []
@@ -82,7 +84,7 @@ covnet = max_pool_2d(covnet, 2)
 covnet = fully_connected(covnet, 1024, activation='relu')
 covnet = dropout(covnet, 0.8)
 
-covnet = fully_connected(covnet, 2, activation='softmax')
+covnet = fully_connected(covnet, 3, activation='softmax')
 covnet = regression(
 	covnet, 
 	optimizer='adam', 
@@ -93,9 +95,9 @@ covnet = regression(
 
 model = tflearn.DNN(covnet, tensorboard_dir = 'log')
 
-if os.path.exists('{}.meta'.format(MODEL_NAME)):
-    model.load(MODEL_NAME)
-    print('model loaded')
+# if os.path.exists('{}.meta'.format(MODEL_NAME)):
+#     model.load(MODEL_NAME)
+#     print('model loaded')
 
 train = train_data[:-500]
 test = train_data[-500:]
@@ -109,7 +111,7 @@ test_y = [ i[1] for i in test]
 model.fit(
 	{ 'input' : X},
 	{'targets' : y}, 
-	n_epoch=1,
+	n_epoch=3,
 	validation_set=(
 		{'input' : test_x},
 		{'targets' : test_y}),
@@ -138,6 +140,9 @@ for num, data in enumerate(test_data[:test_number]):
 
 	model_out = model.predict([data])[0]
 
+	print(np.argmax(model_out))
+	print(" ")
+
 	if np.argmax(model_out) == 1:
 		str_label = "20"
 		if str_label == "20" and str(img_num).split('_')[0] == "tw":
@@ -147,8 +152,15 @@ for num, data in enumerate(test_data[:test_number]):
 			correct.append("Incorrect")
 		str_label =  "20 " + str(img_num)
 		
+	elif np.argmax(model_out) == 2:
+		str_label = "50"
+		if str_label == "50" and str(img_num).split('_')[0] == "fifty":
+			correct.append("Correct")
+			correctCount += 1
+		else:
+			correct.append("Incorrect")	
+		str_label =  "10 " + str(img_num)
 	else:
-		str_label = "10"
 		if str_label == "10" and str(img_num).split('_')[0] == "ten":
 			correct.append("Correct")
 			correctCount += 1
